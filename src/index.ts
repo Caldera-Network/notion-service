@@ -22,17 +22,17 @@ if (
 
 const scheduler = new ToadScheduler();
 
-// const assets = new SimpleIntervalJob(
-// 	{ runImmediately: true, seconds: 1 },
-// 	cloneToChildTask({
-// 		parentDatabaseId: parentDatabaseIdAssets,
-// 		childDatabaseId: childDatabaseIdAssets,
-// 		api: getClient(notionApiKeyAssets),
-// 	}),
-// 	{
-// 		preventOverrun: true,
-// 	},
-// );
+const assets = new SimpleIntervalJob(
+	{ runImmediately: true, seconds: 1 },
+	cloneToChildTask({
+		parentDatabaseId: parentDatabaseIdAssets,
+		childDatabaseId: childDatabaseIdAssets,
+		api: getClient(notionApiKeyAssets),
+	}),
+	{
+		preventOverrun: true,
+	},
+);
 
 const tasks = new SimpleIntervalJob(
 	{ runImmediately: true, seconds: 1 },
@@ -46,5 +46,5 @@ const tasks = new SimpleIntervalJob(
 	},
 );
 
-// scheduler.addSimpleIntervalJob(assets);
+scheduler.addSimpleIntervalJob(assets);
 scheduler.addSimpleIntervalJob(tasks);
