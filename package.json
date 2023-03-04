@@ -1,7 +1,7 @@
 {
 	"name": "@caldera-trade/notion-service",
 	"description": "Notion Database Synchronization Service for Caldera Trade's Contractors",
-	"version": "0.0.21",
+	"version": "0.0.1",
 	"author": {
 		"name": "Caldera Trade",
 		"url": "https://caldera.trade/"
