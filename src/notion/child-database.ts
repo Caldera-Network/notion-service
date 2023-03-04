@@ -1,12 +1,13 @@
+import type { Client } from '@notionhq/client';
 import type {
 	GetDatabaseResponse,
 	PageObjectResponse,
 	PartialPageObjectResponse,
 } from '@notionhq/client/build/src/api-endpoints';
-import { api } from './notion.utils';
 
 // For each database object in the list, update or create a child database object
 export const insertOrUpdateChildDatabase = async (
+	api: Client,
 	childDatabaseId: string,
 	databaseUpdates: PageObjectResponse[],
 ) => {
@@ -86,13 +87,14 @@ export const insertOrUpdateChildDatabase = async (
 };
 
 export const propogateParentIdsToChildDatabase = async (
+	api: Client,
 	childDatabaseId: string,
 	databaseUpdates: {
 		parentId: string;
 		childId: string;
 	}[],
 ) => {
-	console.log("Updating child database's content...");
+	console.log("Updating child database's Corresponding ID...");
 	for (const databaseUpdateObject of databaseUpdates) {
 		const response = await api.databases.query({
 			database_id: childDatabaseId,
@@ -141,6 +143,7 @@ export const propogateParentIdsToChildDatabase = async (
 
 // if parent database has properties that do not exist in child database, add them
 export const updatePropertiesChildDatabase = async (
+	api: Client,
 	parentDatabaseResponse: GetDatabaseResponse,
 	childDatabaseResponse: GetDatabaseResponse,
 	childDatabaseId: string,
@@ -177,6 +180,9 @@ export const updatePropertiesChildDatabase = async (
 				type: 'rich_text',
 				rich_text: {},
 			},
+			Status: undefined,
+			'Related to Public Assets (Related to Tasks (1) (Related to Assets (1) (Related Tasks)))':
+				undefined,
 			'Last edited by': undefined,
 			'Sync?': undefined,
 			ID: undefined,

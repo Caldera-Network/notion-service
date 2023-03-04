@@ -5,11 +5,14 @@ import { updatePropertiesChildDatabase } from './child-database';
 import { updatePropertiesParentDatabase } from './parent-database';
 
 let timeOfLastCheck = 0;
-export const api = new Client({
-	auth: process.env['NOTION_API_KEY'] || '',
-});
+export const getClient = (auth: string) => {
+	return new Client({
+		auth,
+	});
+};
 
 const fetchUpdatedDatabase = async (
+	api: Client,
 	database_id: string,
 	time_since_last_check = 75_000, // TODO: 75_000 default?
 ) => {
@@ -47,6 +50,13 @@ const fetchUpdatedDatabase = async (
 							'67bc1c0e-9264-4d8f-9616-346bc7ae3d59',
 					},
 				},
+				{
+					property: 'Last edited by',
+					last_edited_by: {
+						does_not_contain:
+							'bf11bf38-79d1-44b6-92ce-8588377ab8be',
+					},
+				},
 			],
 		},
 	});
@@ -57,21 +67,25 @@ const fetchUpdatedDatabase = async (
 export const updateDatabaseSchemas = async (parameters: {
 	parentDatabaseId: string;
 	childDatabaseId: string; // TODO: convert to array for one->many
+	api: Client;
 }) => {
 	console.log('Updating Database Schemas...');
-	const { parentDatabaseId, childDatabaseId } = parameters;
+	const { parentDatabaseId, childDatabaseId, api } = parameters;
 	const parentDatabaseResponse = await api.databases.retrieve({
 		database_id: parentDatabaseId,
 	});
 	const childDatabaseResponse = await api.databases.retrieve({
 		database_id: childDatabaseId,
 	});
+
 	await updatePropertiesChildDatabase(
+		api,
 		parentDatabaseResponse,
 		childDatabaseResponse,
 		childDatabaseId,
 	);
 	await updatePropertiesParentDatabase(
+		api,
 		parentDatabaseResponse,
 		childDatabaseResponse,
 		childDatabaseId,
@@ -81,15 +95,19 @@ export const updateDatabaseSchemas = async (parameters: {
 export const mergeUpdatedItems = async (parameters: {
 	parentDatabaseId: string;
 	childDatabaseId: string;
+	api: Client;
 }) => {
+	const { api, childDatabaseId, parentDatabaseId } = parameters;
 	const time = Date.now();
 	const timeSinceTimeOfLastCheck = Date.now() - timeOfLastCheck;
 	const parentUpdatedItems = await fetchUpdatedDatabase(
-		parameters.parentDatabaseId,
+		api,
+		parentDatabaseId,
 		timeSinceTimeOfLastCheck,
 	);
 	const childUpdatedItems = await fetchUpdatedDatabase(
-		parameters.childDatabaseId,
+		api,
+		childDatabaseId,
 		timeSinceTimeOfLastCheck,
 	);
 	timeOfLastCheck = time;
@@ -297,9 +315,12 @@ export const mergeUpdatedItems = async (parameters: {
 };
 
 const cleanupProperties = (properties: PageObjectResponse['properties']) => {
-	let temporaryProperties = { ...properties };
+	let temporaryProperties: Record<string, any> = { ...properties };
 	temporaryProperties = removeRollupTypes(temporaryProperties);
 	temporaryProperties = removeMultiSelectIds(temporaryProperties);
+	temporaryProperties = removeFormulaTypes(temporaryProperties);
+	temporaryProperties = removeCreatedTimeTypes(temporaryProperties);
+	temporaryProperties = removeLastEditedTimeTypes(temporaryProperties);
 	return temporaryProperties;
 };
 const removeRollupTypes = (properties: PageObjectResponse['properties']) => {
@@ -331,6 +352,40 @@ const removeMultiSelectIds = (properties: PageObjectResponse['properties']) => {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				id: undefined as any,
 			};
+		}
+	}
+	return temporaryProperties;
+};
+
+const removeFormulaTypes = (properties: PageObjectResponse['properties']) => {
+	const temporaryProperties: Record<string, any> = { ...properties };
+	for (const [key, value] of Object.entries(properties)) {
+		if (value && value.type === 'formula') {
+			temporaryProperties[key] = undefined;
+		}
+	}
+	return temporaryProperties;
+};
+
+const removeCreatedTimeTypes = (
+	properties: PageObjectResponse['properties'],
+) => {
+	const temporaryProperties: Record<string, any> = { ...properties };
+	for (const [key, value] of Object.entries(properties)) {
+		if (value && value.type === 'created_time') {
+			temporaryProperties[key] = undefined;
+		}
+	}
+	return temporaryProperties;
+};
+
+const removeLastEditedTimeTypes = (
+	properties: PageObjectResponse['properties'],
+) => {
+	const temporaryProperties: Record<string, any> = { ...properties };
+	for (const [key, value] of Object.entries(properties)) {
+		if (value && value.type === 'last_edited_time') {
+			temporaryProperties[key] = undefined;
 		}
 	}
 	return temporaryProperties;

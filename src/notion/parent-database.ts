@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import type { Client } from '@notionhq/client';
 import type {
 	GetDatabaseResponse,
 	PageObjectResponse,
 	PartialPageObjectResponse,
 } from '@notionhq/client/build/src/api-endpoints';
-import { api } from './notion.utils';
 
 // For each database object in the list, update or create a child database object
 export const insertOrUpdateParentDatabase = async (
+	api: Client,
 	parentDatabaseId: string,
 	databaseUpdates: PageObjectResponse[],
 ) => {
@@ -87,6 +88,7 @@ export const insertOrUpdateParentDatabase = async (
 
 // if child database has properties that do not exist in parent database, add them
 export const updatePropertiesParentDatabase = async (
+	api: Client,
 	parentDatabaseResponse: GetDatabaseResponse,
 	childDatabaseResponse: GetDatabaseResponse,
 	parentDatabaseId: string,
@@ -119,6 +121,7 @@ export const updatePropertiesParentDatabase = async (
 		properties: {
 			...parentDatabaseResponse.properties,
 			...propertiesToAddObject,
+			Status: undefined,
 			'Corresponding ID': undefined,
 			'Last edited by': undefined,
 			'Sync?': undefined,
