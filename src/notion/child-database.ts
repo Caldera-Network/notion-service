@@ -161,31 +161,75 @@ export const updatePropertiesChildDatabase = async (
 
 	if (propertiesToAdd.length === 0) return;
 
-	// eslint-disable-next-line unicorn/no-array-reduce, unicorn/prefer-object-from-entries
-	const propertiesToAddObject = propertiesToAdd.reduce(
-		(accumulator, property) => ({
-			...accumulator,
-			[property]: parentDatabaseResponse.properties[property],
-		}),
-		{},
-	);
+	// eslint-disable-next-line unicorn/no-array-reduce, unicorn/prefer-object-from-entries, @typescript-eslint/no-unsafe-assignment
+	const propertiesToAddObjectNonFormulas: Record<string, unknown> =
+		Object.fromEntries(
+			propertiesToAdd
+				.filter((property: string) => {
+					const propertyData =
+						parentDatabaseResponse.properties[property];
+					if (propertyData?.type !== 'formula') return true;
+					return false;
+				})
+				.map((property) => [
+					property,
+					parentDatabaseResponse.properties[property],
+				]),
+		);
 
-	await api.databases.update({
-		database_id: childDatabaseId,
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-		properties: {
-			...childDatabaseResponse.properties,
-			...propertiesToAddObject,
-			'Corresponding ID': {
-				type: 'rich_text',
-				rich_text: {},
-			},
-			Status: undefined,
-			'Related to Public Assets (Related to Tasks (1) (Related to Assets (1) (Related Tasks)))':
-				undefined,
-			'Last edited by': undefined,
-			'Sync?': undefined,
-			ID: undefined,
-		} as any,
-	});
+	if (Object.keys(propertiesToAddObjectNonFormulas).length > 0) {
+		await api.databases.update({
+			database_id: childDatabaseId,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			properties: {
+				...childDatabaseResponse.properties,
+				...propertiesToAddObjectNonFormulas,
+				'Corresponding ID': {
+					type: 'rich_text',
+					rich_text: {},
+				},
+				Status: undefined,
+				'Last edited by': undefined,
+				'Sync?': undefined,
+				ID: undefined,
+			} as any,
+		});
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	const propertiesToAddObjectFormulas: Record<string, unknown> =
+		Object.fromEntries(
+			propertiesToAdd
+				.filter((property: string) => {
+					const propertyData =
+						parentDatabaseResponse.properties[property];
+					if (propertyData?.type === 'formula') return true;
+					return false;
+				})
+				.map((property) => [
+					property,
+					parentDatabaseResponse.properties[property],
+				]),
+		);
+
+	if (Object.keys(propertiesToAddObjectFormulas).length > 0) {
+		console.log('asd');
+		await api.databases.update({
+			database_id: childDatabaseId,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			properties: {
+				...childDatabaseResponse.properties,
+				...propertiesToAddObjectNonFormulas,
+				...propertiesToAddObjectFormulas,
+				'Corresponding ID': {
+					type: 'rich_text',
+					rich_text: {},
+				},
+				Status: undefined,
+				'Last edited by': undefined,
+				'Sync?': undefined,
+				ID: undefined,
+			} as any,
+		});
+	}
 };
