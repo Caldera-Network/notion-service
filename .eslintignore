@@ -1,0 +1,22 @@
+# Linters & Test
+coverage
+jest.config.ts
+.eslintrc.cjs
+.editorconfig
+.prettierignore
+.prettierrc.json
+.lintstagedrc.cjs
+
+# Build
+dist
+src/generated
+
+# Yarn 2
+.pnp.cjs
+.pnp.loader.mjs
+.yarn
+.yarnrc.yml
+yarn.lock
+
+# Jest
+jest.config.cjs

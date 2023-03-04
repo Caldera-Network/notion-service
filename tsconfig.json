@@ -1,0 +1,39 @@
+{
+	"extends": "@tsconfig/node16-strictest-esm/tsconfig.json",
+	"compilerOptions": {
+		"allowSyntheticDefaultImports": true, // openapi-typescript-codegen enabler
+		"lib": [
+			"es2021",
+			"dom" // openapi-typescript-codegen enabler
+		],
+		"target": "esnext",
+		"module": "esnext",
+		"declaration": true,
+		"resolveJsonModule": true,
+		"baseUrl": "./",
+		"outDir": "dist",
+		"sourceMap": true,
+		"types": ["node", "jest"],
+		"paths": {
+			"src/*": ["src/*"]
+		},
+		"plugins": [
+			// Transform paths in output .js files
+			{ "transform": "typescript-transform-paths" },
+
+			// Transform paths in output .d.ts files (Include this line if you output declarations files)
+			{
+				"transform": "typescript-transform-paths",
+				"afterDeclarations": true
+			}
+		]
+	},
+	"ts-node": {
+		"transpileOnly": true,
+		"esm": true,
+		"experimentalSpecifierResolution": "node",
+		"require": ["typescript-transform-paths/register"]
+	},
+	"include": ["src"],
+	"exclude": ["node_modules", "dist"]
+}
