@@ -120,7 +120,7 @@ export const mergeUpdatedItems = async (parameters: {
 					...parentItem,
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					properties: {
-						...removeMultiSelectIds(parentItem.properties),
+						...cleanupProperties(parentItem.properties),
 						'Database Propagation': {
 							type: 'rich_text',
 							rich_text: [
@@ -149,7 +149,7 @@ export const mergeUpdatedItems = async (parameters: {
 					...parentItem,
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					properties: {
-						...removeMultiSelectIds(parentItem.properties),
+						...cleanupProperties(parentItem.properties),
 						'Database Propagation': {
 							type: 'rich_text',
 							rich_text: [
@@ -180,7 +180,7 @@ export const mergeUpdatedItems = async (parameters: {
 					...childItem,
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					properties: {
-						...removeMultiSelectIds(childItem.properties),
+						...cleanupProperties(childItem.properties),
 						'Database Propagation': {
 							type: 'rich_text',
 							rich_text: [
@@ -205,7 +205,7 @@ export const mergeUpdatedItems = async (parameters: {
 				...parentItem,
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				properties: {
-					...removeMultiSelectIds(parentItem.properties),
+					...cleanupProperties(parentItem.properties),
 					'Database Propagation': {
 						type: 'rich_text',
 						rich_text: [
@@ -234,7 +234,7 @@ export const mergeUpdatedItems = async (parameters: {
 				...parentItem,
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				properties: {
-					...removeMultiSelectIds(parentItem.properties),
+					...cleanupProperties(parentItem.properties),
 					'Database Propagation': {
 						type: 'rich_text',
 						rich_text: [
@@ -272,7 +272,7 @@ export const mergeUpdatedItems = async (parameters: {
 				...childItem,
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				properties: {
-					...removeMultiSelectIds(childItem.properties),
+					...cleanupProperties(childItem.properties),
 					'Database Propagation': {
 						type: 'rich_text',
 						rich_text: [
@@ -296,10 +296,26 @@ export const mergeUpdatedItems = async (parameters: {
 	return { parentForChild, childForParent };
 };
 
+const cleanupProperties = (properties: PageObjectResponse['properties']) => {
+	let temporaryProperties = { ...properties };
+	temporaryProperties = removeRollupTypes(temporaryProperties);
+	temporaryProperties = removeMultiSelectIds(temporaryProperties);
+	return temporaryProperties;
+};
+const removeRollupTypes = (properties: PageObjectResponse['properties']) => {
+	const temporaryProperties: Record<string, any> = { ...properties };
+	for (const [key, value] of Object.entries(properties)) {
+		if (value && value.type === 'rollup') {
+			temporaryProperties[key] = undefined;
+		}
+	}
+	return temporaryProperties;
+};
+
 const removeMultiSelectIds = (properties: PageObjectResponse['properties']) => {
 	const temporaryProperties = { ...properties };
 	for (const [key, value] of Object.entries(properties)) {
-		if (value.type === 'multi_select') {
+		if (value && value.type === 'multi_select') {
 			temporaryProperties[key] = {
 				...value,
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
